@@ -1,0 +1,205 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+
+<link rel="import" href="/bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="/bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="/bower_components/core-icon-button/core-icon-button.html">
+<link rel="import" href="/bower_components/core-icons/core-icons.html">
+<link rel="import" href="/bower_components/core-menu/core-menu.html">
+<link rel="import" href="/bower_components/core-item/core-item.html">
+<link rel="import" href="/bower_components/core-drawer-panel/core-drawer-panel.html">
+<link rel="import" href="../bower_components/core-collapse/core-collapse.html">
+
+
+<link rel="import" href="/elements/how2ham-menu-item.html">
+
+
+<polymer-element name="how2ham-main" attributes="">
+	<template>
+		<style>
+			:host {
+				display: block;
+				height: 100%;
+			}
+			core-header-panel {
+				height: 100%;
+			}
+			core-drawer-panel:not([narrow]) #navicon {
+				display: none;
+			}
+			core-toolbar {
+				background: url('/img/radio.jpg');
+			}
+		</style>
+		<core-drawer-panel id="drawerpanel">
+			<core-header-panel drawer mode="waterfall-tall">
+				<core-toolbar>Menu</core-toolbar>
+				<core-menu>
+					<template repeat="{{m in menu}}">
+						<how2ham-menu-item label="{{m.label}}" on-tap="{{menu_collapser}}"></how2ham-menu-item>
+						<core-collapse>
+							<template repeat="{{s in m.submenu}}">
+								<how2ham-menu-item label="{{s.label}}" anchor="{{s.anchor}}" url="{{s.url}}" ele="{{s.element}}" on-tap="{{menu_tap}}"></how2ham-menu-item>
+							</template>
+						</core-collapse>
+					</template>
+				</core-menu>
+			</core-header-panel>
+			<core-header-panel main mode="waterfall-tall">
+				<core-toolbar>
+					<core-icon-button core-drawer-toggle icon="menu">
+					</core-icon-button>
+					<div>MY APP</div>
+				</core-toolbar>
+				<div class="content" id="content">
+					
+				</div>
+			</core-header-panel>
+		</core-drawer-panel>
+	</template>
+	<script>
+		Polymer('how2ham-main', {
+			created: function() {
+				this.menu = [
+					{
+						label: 'Introduction',
+						submenu: [
+							{
+								label: 'Start Here',
+								element: 'how2ham-introduction',
+								anchor: 'course101',
+								url: '/introduction'
+							},
+							{
+								label: 'What is Radio',
+								element: 'how2ham-introduction',
+								anchor: 'whatisradio',
+								url: '/introduction#whatisradio'
+							},
+							{
+								label: "What's a HAM",
+								element: 'how2ham-introduction',
+								anchor: 'ham',
+								url: '/introduction#ham'
+							},
+						]
+					},
+					{
+						label: 'Licensing',
+						submenu: [
+							{
+								label: 'Start Here',
+								element: 'how2ham-introduction',
+								anchor: 'course101',
+								url: '/introduction#course101'
+							},
+							{
+								label: 'What is Radio',
+								element: 'how2ham-introduction',
+								anchor: 'whatisradio',
+								url: '/introduction#whatisradio'
+							},
+							{
+								label: "What's a HAM",
+								element: 'how2ham-introduction',
+								anchor: 'ham',
+								url: '/introduction#ham'
+							},
+						]
+					},
+					{
+						label: 'Introduction',
+						submenu: [
+							{
+								label: 'Start Here',
+								element: 'how2ham-introduction',
+								anchor: 'course101',
+								url: '/introduction#course101'
+							},
+							{
+								label: 'What is Radio',
+								element: 'how2ham-introduction',
+								anchor: 'whatisradio',
+								url: '/introduction#whatisradio'
+							},
+							{
+								label: "What's a HAM",
+								element: 'how2ham-introduction',
+								anchor: 'ham',
+								url: '/introduction#ham'
+							},
+						]
+					},
+				];
+				this.state = {
+					element: 'how2ham-home',
+					title: 'Ham Radio Beginnger Tutorials | How2Ham.org',
+					url: '/',
+					anchor: ''
+				}
+			},
+			ready: function() {
+				this.elemental('replace');
+				this.stately_listen();
+			},
+			elemental: function(stately) {
+				var stately = stately || false;
+				Polymer.import(['/elements/' + this.state.element + '.html'],function() {
+					var newElement = document.createElement(this.state.element);
+					console.log('child',this.$.content.childNodes[0].tagName);
+					var thechild = this.$.content.childNodes[0].tagName || ''
+					if(thechild.toLowerCase() != this.state.element.toLowerCase())
+					{
+						this.$.content.innerHTML = '';
+						this.$.content.appendChild(newElement);
+					}
+					document.title = this.state.title;
+					if(this.state.anchor != '')
+						newElement.shadowRoot.getElementById(this.state.anchor).scrollIntoView(true);
+					if(stately == 'push') {
+						this.stately_push();
+					} else if (stately == 'replace') {
+						this.stately_replace();
+					}
+				}.bind(this));
+			},
+			menu_collapser: function(e,d,o) {
+				var nextSibState = o.nextElementSibling.opened;
+				var collapsables = this.shadowRoot.getElementsByTagName('core-collapse');
+				for (var d = 0; d < collapsables.length; d++) {
+					collapsables[d].opened = false;
+				}
+				if(!nextSibState)
+					o.nextElementSibling.opened = true;
+			},
+			menu_tap: function(e,d,o) {
+				if(this.$.drawerpanel.narrow)
+					this.$.drawerpanel.closeDrawer();
+				this.state = {
+					element: o.ele,
+					title: o.label + ' | How2Ham.org',
+					url: o.url,
+					anchor: o.anchor
+				};
+				console.log('menu tapped',this.state);
+				this.elemental('push');
+			},
+			stately_replace: function() {
+				console.log('replacing state',this.state);
+				document.title = this.state.title;
+				window.history.replaceState(JSON.stringify(this.state),this.state.title,this.state.url);
+			},
+			stately_push: function() {
+				console.log('pushing state',this.state);
+				document.title = this.state.title;
+				window.history.pushState(JSON.stringify(this.state),this.state.title,this.state.url);
+			},
+			stately_listen: function() {
+				window.addEventListener('popstate', function(e) {
+					console.log('Popped!',e.state);
+					this.state = JSON.parse(e.state);
+					this.elemental();
+				}.bind(this));
+			},
+		});
+	</script>
+</polymer-element>
